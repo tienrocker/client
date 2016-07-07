@@ -4,7 +4,8 @@ namespace Photon.LoadBalancing.Client.Operations.Responses
     using System;
     using ExitGames.Client.Photon;
     using Custom.Common;
-
+    using GuestSong;
+    using UnityEngine;
     public class ProfileResponse
     {
         public int Id { get; set; }
@@ -24,6 +25,8 @@ namespace Photon.LoadBalancing.Client.Operations.Responses
                 this.Id = (int)operationResponse.Parameters[Const.Data1];
                 this.Username = operationResponse.Parameters[Const.Data2] as string;
                 this.Nickname = operationResponse.Parameters[Const.Data3] as string;
+
+                if (NetworkManager.responseDebug) Debug.LogFormat("Profile : {0} ", LitJson.JsonMapper.ToJson(this));
             }
             catch
             {

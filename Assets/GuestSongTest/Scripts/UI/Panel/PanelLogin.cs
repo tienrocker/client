@@ -24,6 +24,12 @@ namespace GuestSong
         [SerializeField]
         private UIButton btnRegister;
 
+        [SerializeField]
+        private bool autoLogin = false;
+        private int autoLoginTimes = 0;
+        [SerializeField]
+        private int maxAutoLoginTimes = 10;
+
         void Awake()
         {
             txtUserName.value = txtPassword.value = "test";
@@ -31,21 +37,35 @@ namespace GuestSong
 
             EventDelegate.Add(btnLogin.onClick, onLogin);
             EventDelegate.Add(btnRegister.onClick, onLogin);
+            EventDelegate.Add(txtUserName.onSubmit, onLogin);
+        }
+
+        public override void OnShow()
+        {
+            base.OnShow();
+            NetworkManager.Instance.onCustomAuthenticationFailed += OnCustomAuthenticationFailed;
+
+            this.txtUserName.isSelected = true;
+            if (this.autoLogin && this.autoLoginTimes < this.maxAutoLoginTimes)
+            {
+                NetworkManager.Instance.Connect(txtUserName.value, txtPassword.value, false);
+                this.autoLoginTimes++;
+            }
+        }
+
+        public override void OnHide()
+        {
+            base.OnHide();
+            NetworkManager.Instance.onCustomAuthenticationFailed -= OnCustomAuthenticationFailed;
         }
 
         void onLogin()
         {
-            NetworkManager.Instance.onCustomAuthenticationFailed -= OnCustomAuthenticationFailed;
-            NetworkManager.Instance.onCustomAuthenticationFailed += OnCustomAuthenticationFailed;
-
             NetworkManager.Instance.Connect(txtUserName.value, txtPassword.value, false);
         }
 
         void onRegister()
         {
-            NetworkManager.Instance.onCustomAuthenticationFailed -= OnCustomAuthenticationFailed;
-            NetworkManager.Instance.onCustomAuthenticationFailed += OnCustomAuthenticationFailed;
-
             NetworkManager.Instance.Connect(txtUserName.value, txtPassword.value, true, txtNickname.value);
         }
 

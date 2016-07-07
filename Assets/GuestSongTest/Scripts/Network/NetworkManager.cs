@@ -11,6 +11,7 @@
     /// </summary>
     public class NetworkManager : Photon.PunBehaviour
     {
+        public static bool responseDebug = true;
 
         #region Public Variables
 

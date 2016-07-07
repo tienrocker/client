@@ -91,7 +91,7 @@ namespace Photon.LoadBalancing.Custom.Server
         //    return null;
         //}
 
-        public static OperationResponse Profile(PeerBase peer, OperationRequest operationRequest, SendParameters sendParameters)
+        public static OperationResponse ProfileResponse(PeerBase peer, OperationRequest operationRequest, SendParameters sendParameters)
         {
             // validate the operation request 
             OperationResponse response;
@@ -125,7 +125,7 @@ namespace Photon.LoadBalancing.Custom.Server
             return null;
         }
 
-        public static OperationResponse Playlist(PeerBase peer, OperationRequest operationRequest, SendParameters sendParameters)
+        public static OperationResponse PlaylistResponse(PeerBase peer, OperationRequest operationRequest, SendParameters sendParameters)
         {
             // validate the operation request 
             OperationResponse response;
@@ -177,9 +177,9 @@ namespace Photon.LoadBalancing.Custom.Server
             return null;
         }
 
-        public static void SetState(List<HivePeer> peers, Common.Quiz.SongGameState state) { foreach (var peer in peers) { SetState(peer, state); } }
+        public static void GameStateResponse(List<HivePeer> peers, Common.Quiz.SongGameState state) { foreach (var peer in peers) { GameStateResponse(peer, state); } }
 
-        public static void SetState(PeerBase peer, Common.Quiz.SongGameState state)
+        public static void GameStateResponse(PeerBase peer, Common.Quiz.SongGameState state)
         {
             try
             {
@@ -191,7 +191,7 @@ namespace Photon.LoadBalancing.Custom.Server
             }
         }
 
-        public static void QuestionList(List<HivePeer> peers, SongGame data)
+        public static void QuestionListResponse(List<HivePeer> peers, SongGame data, int playedRound, int totalRound)
         {
             try
             {
@@ -201,23 +201,24 @@ namespace Photon.LoadBalancing.Custom.Server
 
                     QuestionListResponse _response = new QuestionListResponse();
 
-                    int question_number = data.PlayedRound == 0 ? Rules.ROUND_1_SONG_NUMBER : (data.PlayedRound == 2 ? Rules.ROUND_2_SONG_NUMBER : Rules.ROUND_3_SONG_NUMBER); // get round question number
-                    ModelQuestion[] questions = db.Questions.Where(x => x.playlist_id == data.PlayListId).Take(question_number).ToArray();
+                    int question_number = data.round_index == 0 ? Rules.ROUND_1_SONG_NUMBER : (data.round_index == 2 ? Rules.ROUND_2_SONG_NUMBER : Rules.ROUND_3_SONG_NUMBER); // get round question number
+                    List<ModelQuestion> questions = db.Questions.Where(x => x.playlist_id == data.PlayListId).Take(question_number).ToList();
 
-                    if (questions.Length != 0)
+                    if (questions.Count != 0)
                     {
-                        _response.Id = new int[questions.Length];
-                        _response.Question = new string[questions.Length];
-                        _response.Option1 = new string[questions.Length];
-                        _response.Option2 = new string[questions.Length];
-                        _response.Option3 = new string[questions.Length];
-                        _response.Option4 = new string[questions.Length];
-                        _response.Answer = new int[questions.Length];
-                        _response.Url = new string[questions.Length];
-                        _response.BundleName = new string[questions.Length];
-                        _response.AssetName = new string[questions.Length];
+                        _response.Id = new int[questions.Count];
+                        _response.Question = new string[questions.Count];
+                        _response.Option1 = new string[questions.Count];
+                        _response.Option2 = new string[questions.Count];
+                        _response.Option3 = new string[questions.Count];
+                        _response.Option4 = new string[questions.Count];
+                        _response.Url = new string[questions.Count];
+                        _response.BundleName = new string[questions.Count];
+                        _response.AssetName = new string[questions.Count];
+                        _response.PlayedRound = playedRound;
+                        _response.TotalRound = totalRound;
 
-                        for (int i = 0; i < questions.Length; i++)
+                        for (int i = 0; i < questions.Count; i++)
                         {
                             _response.Id[i] = questions[i].id;
                             _response.Question[i] = questions[i].question;
@@ -225,19 +226,21 @@ namespace Photon.LoadBalancing.Custom.Server
                             _response.Option2[i] = questions[i].option2;
                             _response.Option3[i] = questions[i].option3;
                             _response.Option4[i] = questions[i].option4;
-                            _response.Answer[i] = questions[i].answer;
 
                             // get song, normaly we will take from redis db for better performance
                             ModelSong song = db.Songs.Find(questions[i].song_id);
-                            if (song == null) throw new Exception("Invalid song id in question: " + questions[i].id);
+                            if (song == null)
+                            {
+                                questions.Remove(questions[i]);
+                                throw new Exception("Invalid song id in question: " + questions[i].id);
+                            }
                             _response.Url[i] = song.url;
                             _response.BundleName[i] = song.bundle_name;
                             _response.AssetName[i] = song.asset_name;
                         }
                     }
 
-                    data.QuestionList.Add(_response); // add history to game data
-
+                    data.questions = questions;
                     foreach (PeerBase peer in peers) SendResponse(peer, _response, new SendParameters());
                 }
             }
@@ -247,11 +250,24 @@ namespace Photon.LoadBalancing.Custom.Server
             }
         }
 
-        public static void ReadyList(List<HivePeer> peers, List<int> ReadyPlayerIds)
+        public static void ReadyPlayersResponse(List<HivePeer> peers, List<int> ReadyPlayerIds)
         {
             ReadyPlayersResponse _response = new ReadyPlayersResponse() { Id = ReadyPlayerIds.ToArray() };
             foreach (PeerBase peer in peers) SendResponse(peer, _response, new SendParameters());
         }
+
+        public static void AnwserBuzzResponse(List<HivePeer> peers, int PlayerId, int Time)
+        {
+            AnwserBuzzResponse _response = new AnwserBuzzResponse() { Id = PlayerId };
+            foreach (PeerBase peer in peers) SendResponse(peer, _response, new SendParameters());
+        }
+
+        public static void AnwserTextResponse(List<HivePeer> peers, int PlayerId, string Text)
+        {
+            AnwserTextResponse _response = new AnwserTextResponse() { Id = PlayerId, Text = Text };
+            foreach (PeerBase peer in peers) SendResponse(peer, _response, new SendParameters());
+        }
+
     }
 }
 #endif

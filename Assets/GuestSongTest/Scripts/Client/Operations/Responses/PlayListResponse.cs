@@ -5,7 +5,8 @@ namespace Photon.LoadBalancing.Client.Operations.Responses
     using ExitGames.Client.Photon;
     using Custom.Common;
     using Custom.Models;
-
+    using GuestSong;
+    using UnityEngine;
     public class PlayListResponse
     {
         public int[] Id { get; set; }
@@ -59,6 +60,7 @@ namespace Photon.LoadBalancing.Client.Operations.Responses
                     this.PlayLists[i] = info;
                 }
 
+                if (NetworkManager.responseDebug) Debug.LogFormat("PlayList : {0} ", LitJson.JsonMapper.ToJson(this.PlayLists));
             }
             catch
             {

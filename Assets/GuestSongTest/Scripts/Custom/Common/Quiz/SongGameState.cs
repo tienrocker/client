@@ -6,8 +6,10 @@
         WAIT, // wait client download
         READY, // client send ready state to server
         START, // start game
-        ROUND1,
-        ROUND2,
+        PLAYING,
+        RESULT,
+        WAIT_NEXT_QUESTION,
+        WAIT_NEXT_ROUND,
         END,
     }
 }

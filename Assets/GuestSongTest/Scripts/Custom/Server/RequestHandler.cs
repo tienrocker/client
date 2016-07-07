@@ -28,10 +28,10 @@ namespace Photon.LoadBalancing.Custom.Server
             {
 
                 case MessageTag.U_PROFILE:
-                    return ResponseHandler.Profile(peer, operationRequest, sendParameters);
+                    return ResponseHandler.ProfileResponse(peer, operationRequest, sendParameters);
 
                 case MessageTag.G_PLAYLIST:
-                    return ResponseHandler.Playlist(peer, operationRequest, sendParameters);
+                    return ResponseHandler.PlaylistResponse(peer, operationRequest, sendParameters);
 
                 default:
                     return OperationHandlerDefault.HandleUnknownOperationCode(operationRequest, log);

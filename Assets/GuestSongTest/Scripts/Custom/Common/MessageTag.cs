@@ -13,5 +13,9 @@
         public const byte G_PLAYLIST = 50;
         public const byte G_QUESTIONLIST = 51;
         public const byte G_READY_LIST = 52;
+
+        public const byte G_ANWSER_BUZZ = 60;
+        public const byte G_ANWSER_TEXT = 61;
+        public const byte G_ANWSER_OPTION = 62;
     }
 }

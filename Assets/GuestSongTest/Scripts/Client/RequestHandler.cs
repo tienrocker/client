@@ -10,14 +10,24 @@ namespace Photon.LoadBalancing.Client
             new ProfileRequest(UserId).Execute();
         }
 
-        public static void RequestPlayList(int UserId)
+        public static void RequestPlayList()
         {
-            new PlaylistRequest(UserId).Execute();
+            new PlaylistRequest().Execute();
         }
 
-        public static void RequestReadyPlay(int UserId)
+        public static void RequestReadyPlay()
         {
-            new ReadyRequest(UserId).Execute();
+            new ReadyRequest().Execute();
+        }
+
+        public static void RequestAnwserBuzz()
+        {
+            new AnwserBuzzRequest().Execute();
+        }
+
+        public static void RequestAnwserText(string anwserText)
+        {
+            new AnwserTextRequest(anwserText).Execute();
         }
     }
 }

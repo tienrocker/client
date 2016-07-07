@@ -5,7 +5,8 @@ namespace Photon.LoadBalancing.Client.Operations.Responses
     using ExitGames.Client.Photon;
     using Custom.Common;
     using Custom.Common.Quiz;
-
+    using GuestSong;
+    using UnityEngine;
     public class GameStateResponse
     {
         public SongGameState State { get; set; }
@@ -19,6 +20,7 @@ namespace Photon.LoadBalancing.Client.Operations.Responses
             try
             {
                 this.State = (SongGameState)operationResponse.Parameters[Const.Data1];
+                if (NetworkManager.responseDebug) Debug.LogFormat("Game state change: {0} ", this.State.ToString());
             }
             catch
             {

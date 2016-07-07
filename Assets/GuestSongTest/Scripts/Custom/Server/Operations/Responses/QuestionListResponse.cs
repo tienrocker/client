@@ -36,16 +36,19 @@ namespace Photon.LoadBalancing.Custom.Server.Operations.Responses
         public string[] Option4 { get; set; }
 
         [DataMember(Code = Const.Data7, IsOptional = false)]
-        public int[] Answer { get; set; }
-
-        [DataMember(Code = Const.Data8, IsOptional = false)]
         public string[] Url { get; set; }
 
-        [DataMember(Code = Const.Data9, IsOptional = false)]
+        [DataMember(Code = Const.Data8, IsOptional = false)]
         public string[] BundleName { get; set; }
 
-        [DataMember(Code = Const.Data10, IsOptional = false)]
+        [DataMember(Code = Const.Data9, IsOptional = false)]
         public string[] AssetName { get; set; }
+
+        [DataMember(Code = Const.Data10, IsOptional = false)]
+        public int PlayedRound { get; set; }
+
+        [DataMember(Code = Const.Data11, IsOptional = false)]
+        public int TotalRound { get; set; }
 
         [DataMember(Code = MessageTag.KINGPLAY_OPERATION_TAG, IsOptional = false)]
         public int SubCode { get { return MessageTag.G_QUESTIONLIST; } }

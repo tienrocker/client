@@ -15,6 +15,8 @@ namespace Photon.LoadBalancing.Client
         public static Action<QuestionListResponse> onSongListResponse;
         public static Action<GameStateResponse> onGameStateChangeResponse;
         public static Action<ReadyPlayersResponse> onReadyListResponse;
+        public static Action<AnwserBuzzResponse> onAnwserBuzzResponse;
+        public static Action<AnwserTextResponse> onAnwserTextResponse;
 
         public static OperationResponse TryPaser(OperationResponse operationResponse)
         {
@@ -26,31 +28,54 @@ namespace Photon.LoadBalancing.Client
             {
                 switch (opCode)
                 {
-
                     case MessageTag.U_PROFILE:
-                        ProfileResponse profile = new ProfileResponse(operationResponse);
-
-                        // bind data to Me
-                        if (profile.Id == int.Parse(PhotonNetwork.networkingPeer.mLocalActor.userId)) Me.Data = new Custom.Models.ModelUser() { id = profile.Id, username = profile.Username, nickname = profile.Nickname };
-
-                        // call another event handler
-                        if (onProfileResponse != null) onProfileResponse(profile);
+                        {
+                            ProfileResponse response = new ProfileResponse(operationResponse);
+                            if (response.Id == int.Parse(PhotonNetwork.networkingPeer.mLocalActor.userId)) Me.Data = new Custom.Models.ModelUser() { id = response.Id, username = response.Username, nickname = response.Nickname }; // bind data to Me
+                            if (onProfileResponse != null) onProfileResponse(response); // call another event handler
+                        }
                         break;
 
                     case MessageTag.G_PLAYLIST:
-                        if (onPlaylistResponse != null) onPlaylistResponse(new PlayListResponse(operationResponse));
+                        {
+                            var response = new PlayListResponse(operationResponse);
+                            if (onPlaylistResponse != null) onPlaylistResponse(response);
+                        }
                         break;
 
                     case MessageTag.G_QUESTIONLIST:
-                        if (onSongListResponse != null) onSongListResponse(new QuestionListResponse(operationResponse));
+                        {
+                            var response = new QuestionListResponse(operationResponse);
+                            if (onSongListResponse != null) onSongListResponse(response);
+                        }
                         break;
 
                     case MessageTag.G_STATE_CHANGE:
-                        if (onGameStateChangeResponse != null) onGameStateChangeResponse(new GameStateResponse(operationResponse));
+                        {
+                            var response = new GameStateResponse(operationResponse);
+                            if (onGameStateChangeResponse != null) onGameStateChangeResponse(response);
+                        }
                         break;
 
                     case MessageTag.G_READY_LIST:
-                        if (onReadyListResponse != null) onReadyListResponse(new ReadyPlayersResponse(operationResponse));
+                        {
+                            var response = new ReadyPlayersResponse(operationResponse);
+                            if (onReadyListResponse != null) onReadyListResponse(response);
+                        }
+                        break;
+
+                    case MessageTag.G_ANWSER_BUZZ:
+                        {
+                            var response = new AnwserBuzzResponse(operationResponse);
+                            if (onAnwserBuzzResponse != null) onAnwserBuzzResponse(response);
+                        }
+                        break;
+
+                    case MessageTag.G_ANWSER_TEXT:
+                        {
+                            var response = new AnwserTextResponse(operationResponse);
+                            if (onAnwserTextResponse != null) onAnwserTextResponse(response);
+                        }
                         break;
 
                     default:
@@ -60,7 +85,7 @@ namespace Photon.LoadBalancing.Client
             }
             catch (Exception ex)
             {
-                Debug.LogFormat("<color=red>Error in {0}: {1} - [2]</color>", opCode, ex.Message, operationResponse);
+                Debug.LogFormat("<color=red>Error in {0}: {1} - {2}</color>", opCode, ex.Message, operationResponse);
             }
 
             return null;

@@ -20,6 +20,8 @@ namespace GuestSong
 
         private RoomOptions roomOptions;
 
+        public UIButton firstItem; // for auto join room
+
         void Awake()
         {
             DragScrollView = DragScrollView == null ? gameObject.GetComponent<UIDragScrollView>() : DragScrollView;
@@ -37,8 +39,11 @@ namespace GuestSong
             go.transform.parent = WrapContent.transform;
         }
 
+        public bool AddedItem = false;
         public void AddItem(ModelPlayList[] items)
         {
+            if (AddedItem == true) return;
+            AddedItem = true;
             for (int i = 0; i < items.Length; i++)
             {
                 ModelPlayList item = items[i];
@@ -53,6 +58,7 @@ namespace GuestSong
                 label.text = item.name;
 
                 EventDelegate.Add(go.GetComponent<UIButton>().onClick, () => { OnPlaylistItemClicked(item); });
+                if (firstItem == null) firstItem = go.GetComponent<UIButton>();
             }
 
             _UIWrapContent.SortAlphabetically();

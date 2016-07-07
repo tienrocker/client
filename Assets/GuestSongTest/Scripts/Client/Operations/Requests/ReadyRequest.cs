@@ -7,9 +7,8 @@ namespace Photon.LoadBalancing.Client.Operations.Requests
     {
         public override byte Tag { get { return MessageTag.G_READY; } }
 
-        public ReadyRequest(int UserId) : base()
+        public ReadyRequest() : base()
         {
-            this.Data.Add(Const.Data1, UserId);
         }
 
     }

@@ -5,7 +5,8 @@ namespace Photon.LoadBalancing.Client.Operations.Responses
     using ExitGames.Client.Photon;
     using Custom.Common;
     using UnityEngine;
-
+    using GuestSong;
+    
     [Serializable]
     public class QuestionList
     {
@@ -15,10 +16,11 @@ namespace Photon.LoadBalancing.Client.Operations.Responses
         public string Option2;
         public string Option3;
         public string Option4;
-        public int Answer;
         public string Url;
         public string BundleName;
         public string AssetName;
+        public int PlayedRound;
+        public int TotalRound;
         public AudioClip AudioClip;
     }
 
@@ -30,10 +32,11 @@ namespace Photon.LoadBalancing.Client.Operations.Responses
         public string[] Option2 { get; set; }
         public string[] Option3 { get; set; }
         public string[] Option4 { get; set; }
-        public int[] Answer { get; set; }
         public string[] Url { get; set; }
         public string[] BundleName { get; set; }
         public string[] AssetName { get; set; }
+        public int PlayedRound { get; set; }
+        public int TotalRound { get; set; }
         public int SubCode { get { return MessageTag.G_QUESTIONLIST; } }
 
         public QuestionList[] QuestionLists;
@@ -47,10 +50,11 @@ namespace Photon.LoadBalancing.Client.Operations.Responses
             if (!operationResponse.Parameters.ContainsKey(Const.Data4)) throw new System.Exception("SongListResponse: Invalid Data 4 - Option2");
             if (!operationResponse.Parameters.ContainsKey(Const.Data5)) throw new System.Exception("SongListResponse: Invalid Data 5 - Option3");
             if (!operationResponse.Parameters.ContainsKey(Const.Data6)) throw new System.Exception("SongListResponse: Invalid Data 6 - Option4");
-            if (!operationResponse.Parameters.ContainsKey(Const.Data7)) throw new System.Exception("SongListResponse: Invalid Data 7 - Answer");
-            if (!operationResponse.Parameters.ContainsKey(Const.Data8)) throw new System.Exception("SongListResponse: Invalid Data 8 - Url");
-            if (!operationResponse.Parameters.ContainsKey(Const.Data9)) throw new System.Exception("SongListResponse: Invalid Data 9 - BundleName");
-            if (!operationResponse.Parameters.ContainsKey(Const.Data10)) throw new System.Exception("SongListResponse: Invalid Data 10 - AssetName");
+            if (!operationResponse.Parameters.ContainsKey(Const.Data7)) throw new System.Exception("SongListResponse: Invalid Data 7 - Url");
+            if (!operationResponse.Parameters.ContainsKey(Const.Data8)) throw new System.Exception("SongListResponse: Invalid Data 8 - BundleName");
+            if (!operationResponse.Parameters.ContainsKey(Const.Data9)) throw new System.Exception("SongListResponse: Invalid Data 9 - AssetName");
+            if (!operationResponse.Parameters.ContainsKey(Const.Data10)) throw new System.Exception("SongListResponse: Invalid Data 10 - PlayedRound");
+            if (!operationResponse.Parameters.ContainsKey(Const.Data11)) throw new System.Exception("SongListResponse: Invalid Data 11 - TotalRound");
 
             try
             {
@@ -61,10 +65,11 @@ namespace Photon.LoadBalancing.Client.Operations.Responses
                 this.Option2 = operationResponse[Const.Data4] as string[];
                 this.Option3 = operationResponse[Const.Data5] as string[];
                 this.Option4 = operationResponse[Const.Data6] as string[];
-                this.Answer = operationResponse[Const.Data7] as int[];
-                this.Url = operationResponse[Const.Data8] as string[];
-                this.BundleName = operationResponse[Const.Data9] as string[];
-                this.AssetName = operationResponse[Const.Data10] as string[];
+                this.Url = operationResponse[Const.Data7] as string[];
+                this.BundleName = operationResponse[Const.Data8] as string[];
+                this.AssetName = operationResponse[Const.Data9] as string[];
+                this.PlayedRound = (int)operationResponse[Const.Data10];
+                this.TotalRound = (int)operationResponse[Const.Data11];
 
                 this.QuestionLists = new QuestionList[this.Id.Length];
                 for (int i = 0; i < this.Id.Length; i++)
@@ -76,14 +81,16 @@ namespace Photon.LoadBalancing.Client.Operations.Responses
                     info.Option2 = this.Option2[i];
                     info.Option3 = this.Option3[i];
                     info.Option4 = this.Option4[i];
-                    info.Answer = this.Answer[i];
                     info.Url = this.Url[i];
                     info.BundleName = this.BundleName[i];
                     info.AssetName = this.AssetName[i];
+                    info.PlayedRound = this.PlayedRound;
+                    info.TotalRound = this.TotalRound;
 
                     this.QuestionLists[i] = info;
                 }
 
+                if (NetworkManager.responseDebug) Debug.LogFormat("List question: {0} ", LitJson.JsonMapper.ToJson(this.QuestionLists));
             }
             catch
             {

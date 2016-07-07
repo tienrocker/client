@@ -10,15 +10,14 @@ namespace GuestSong
     {
         [SerializeField]
         private UILabel txtDebug;
-
         [SerializeField]
         private UIButton btnProfile;
-
         [SerializeField]
         private UIButton btnPlayList;
-
         [SerializeField]
         private PlayListView playListView;
+        [SerializeField]
+        private bool autoJoinGame = false;
 
         void Awake()
         {
@@ -26,10 +25,23 @@ namespace GuestSong
             EventDelegate.Add(btnPlayList.onClick, onPlayList);
         }
 
+        public override void OnShow()
+        {
+            base.OnShow();
+            ResponseHandler.onProfileResponse += OnProfileResponse;
+            ResponseHandler.onPlaylistResponse += OnPlaylistResponse;
+            this.onPlayList();
+        }
+
+        public override void OnHide()
+        {
+            base.OnHide();
+            ResponseHandler.onProfileResponse -= OnProfileResponse;
+            ResponseHandler.onPlaylistResponse -= OnPlaylistResponse;
+        }
+
         void onProfile()
         {
-            ResponseHandler.onProfileResponse -= OnProfileResponse;
-            ResponseHandler.onProfileResponse += OnProfileResponse;
             RequestHandler.RequestProfile(int.Parse(PhotonNetwork.networkingPeer.mLocalActor.userId));
         }
 
@@ -42,9 +54,7 @@ namespace GuestSong
 
         void onPlayList()
         {
-            ResponseHandler.onPlaylistResponse -= OnPlaylistResponse;
-            ResponseHandler.onPlaylistResponse += OnPlaylistResponse;
-            RequestHandler.RequestPlayList(int.Parse(PhotonNetwork.networkingPeer.mLocalActor.userId));
+            RequestHandler.RequestPlayList();
         }
 
         private void OnPlaylistResponse(PlayListResponse response)
@@ -54,6 +64,7 @@ namespace GuestSong
             else Debug.Log(_debug);
 
             playListView.AddItem(response.PlayLists);
+            if (this.autoJoinGame) { playListView.firstItem.SendMessage("OnClick"); }
         }
     }
 }

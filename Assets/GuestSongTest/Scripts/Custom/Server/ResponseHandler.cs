@@ -25,6 +25,8 @@ namespace Photon.LoadBalancing.Custom.Server
             peer.SendOperationResponse(new OperationResponse(MessageTag.KINGPLAY_OPERATION_CODE, response), sendParameters);
         }
 
+        #region master response
+
         //public static OperationResponse ListGame(PeerBase peer, OperationRequest operationRequest, SendParameters sendParameters)
         //{
         //    // validate the operation request 
@@ -177,6 +179,8 @@ namespace Photon.LoadBalancing.Custom.Server
             return null;
         }
 
+        #endregion
+
         public static void GameStateResponse(List<HivePeer> peers, Common.Quiz.SongGameState state) { foreach (var peer in peers) { GameStateResponse(peer, state); } }
 
         public static void GameStateResponse(PeerBase peer, Common.Quiz.SongGameState state)
@@ -265,6 +269,12 @@ namespace Photon.LoadBalancing.Custom.Server
         public static void AnwserTextResponse(List<HivePeer> peers, int PlayerId, string Text)
         {
             AnwserTextResponse _response = new AnwserTextResponse() { Id = PlayerId, Text = Text };
+            foreach (PeerBase peer in peers) SendResponse(peer, _response, new SendParameters());
+        }
+
+        public static void AnwserOptionResponse(List<HivePeer> peers, int PlayerId, int Index)
+        {
+            AnwserOptionResponse _response = new AnwserOptionResponse() { Id = PlayerId, Index = Index };
             foreach (PeerBase peer in peers) SendResponse(peer, _response, new SendParameters());
         }
 

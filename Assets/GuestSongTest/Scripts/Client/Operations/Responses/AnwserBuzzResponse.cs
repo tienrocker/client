@@ -14,9 +14,9 @@ namespace Photon.LoadBalancing.Client.Operations.Responses
 
         public AnwserBuzzResponse(OperationResponse operationResponse)
         {
-            if (!operationResponse.Parameters.ContainsKey(MessageTag.KINGPLAY_OPERATION_TAG)) throw new Exception("ProfileResponse: Invalid Response Type");
-            if (!operationResponse.Parameters.ContainsKey(Const.Data1)) throw new Exception("ProfileResponse: Invalid Data 1 - Id");
-            if (!operationResponse.Parameters.ContainsKey(Const.Data2)) throw new Exception("ProfileResponse: Invalid Data 1 - Time");
+            if (!operationResponse.Parameters.ContainsKey(MessageTag.KINGPLAY_OPERATION_TAG)) throw new Exception("AnwserBuzzResponse: Invalid Response Type");
+            if (!operationResponse.Parameters.ContainsKey(Const.Data1)) throw new Exception("AnwserBuzzResponse: Invalid Data 1 - Id");
+            if (!operationResponse.Parameters.ContainsKey(Const.Data2)) throw new Exception("AnwserBuzzResponse: Invalid Data 2 - Time");
 
             try
             {
@@ -27,7 +27,7 @@ namespace Photon.LoadBalancing.Client.Operations.Responses
             }
             catch
             {
-                throw new Exception("ProfileResponse: Invalid Data Type");
+                throw new Exception("AnwserBuzzResponse: Invalid Data Type");
             }
         }
     }

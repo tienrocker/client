@@ -10,13 +10,13 @@ namespace Photon.LoadBalancing.Client.Operations.Responses
     {
         public int Id { get; set; }
         public string Text { get; set; }
-        public int SubCode { get { return MessageTag.G_ANWSER_BUZZ; } }
+        public int SubCode { get { return MessageTag.G_ANWSER_TEXT; } }
 
         public AnwserTextResponse(OperationResponse operationResponse)
         {
-            if (!operationResponse.Parameters.ContainsKey(MessageTag.KINGPLAY_OPERATION_TAG)) throw new Exception("ProfileResponse: Invalid Response Type");
-            if (!operationResponse.Parameters.ContainsKey(Const.Data1)) throw new Exception("ProfileResponse: Invalid Data 1 - Id");
-            if (!operationResponse.Parameters.ContainsKey(Const.Data2)) throw new Exception("ProfileResponse: Invalid Data 1 - Text");
+            if (!operationResponse.Parameters.ContainsKey(MessageTag.KINGPLAY_OPERATION_TAG)) throw new Exception("AnwserTextResponse: Invalid Response Type");
+            if (!operationResponse.Parameters.ContainsKey(Const.Data1)) throw new Exception("AnwserTextResponse: Invalid Data 1 - Id");
+            if (!operationResponse.Parameters.ContainsKey(Const.Data2)) throw new Exception("AnwserTextResponse: Invalid Data 1 - Text");
 
             try
             {
@@ -27,7 +27,7 @@ namespace Photon.LoadBalancing.Client.Operations.Responses
             }
             catch
             {
-                throw new Exception("ProfileResponse: Invalid Data Type");
+                throw new Exception("AnwserTextResponse: Invalid Data Type");
             }
         }
     }

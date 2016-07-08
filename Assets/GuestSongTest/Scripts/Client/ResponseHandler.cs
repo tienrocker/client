@@ -17,6 +17,7 @@ namespace Photon.LoadBalancing.Client
         public static Action<ReadyPlayersResponse> onReadyListResponse;
         public static Action<AnwserBuzzResponse> onAnwserBuzzResponse;
         public static Action<AnwserTextResponse> onAnwserTextResponse;
+        public static Action<AnwserOptionResponse> onAnwserOptionResponse;
 
         public static OperationResponse TryPaser(OperationResponse operationResponse)
         {
@@ -75,6 +76,13 @@ namespace Photon.LoadBalancing.Client
                         {
                             var response = new AnwserTextResponse(operationResponse);
                             if (onAnwserTextResponse != null) onAnwserTextResponse(response);
+                        }
+                        break;
+
+                    case MessageTag.G_ANWSER_OPTION:
+                        {
+                            var response = new AnwserOptionResponse(operationResponse);
+                            if (onAnwserOptionResponse != null) onAnwserOptionResponse(response);
                         }
                         break;
 

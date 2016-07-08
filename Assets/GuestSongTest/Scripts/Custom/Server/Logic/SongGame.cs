@@ -2,7 +2,6 @@
 namespace Photon.LoadBalancing.Custom.Server.Logic
 {
     using System.Collections.Generic;
-    using Photon.LoadBalancing.Custom.Server.Operations.Responses;
     using Photon.LoadBalancing.Custom.Common.Quiz;
     using Hive;
     using Common;
@@ -13,7 +12,6 @@ namespace Photon.LoadBalancing.Custom.Server.Logic
     using SocketServer;
     using MasterServer;
     using Operations.Requests;
-    using Database;
     using Song;
     using Models;
     using System.Linq;
@@ -39,7 +37,8 @@ namespace Photon.LoadBalancing.Custom.Server.Logic
         public int question_index { get; set; }
         public int total_question { get; set; }
 
-        public List<PlayerAnswer> players_answer = new List<PlayerAnswer>();
+        public PlayerAnswer[] players_answer = null;
+        public List<PlayerAnswer[]> histories = new List<PlayerAnswer[]>();
 
         public List<ModelQuestion> questions = null;
         public ModelQuestion current_question = null;
@@ -73,9 +72,7 @@ namespace Photon.LoadBalancing.Custom.Server.Logic
             this.state = SongGameState.WAIT; // reset
             this.ReadyPlayerIds = new List<int>();
 
-            ResponseHandler.GameStateResponse(this.peers, this.state); // send game state
             ResponseHandler.QuestionListResponse(this.peers, this, this.round_index, this.total_round); // send song list
-
             game.ExecutionFiber.Enqueue(() => OnGameWaitToDownload()); // change state to wait
         }
 
@@ -175,7 +172,9 @@ namespace Photon.LoadBalancing.Custom.Server.Logic
             this.current_question = this.questions[this.question_index];
 
             var game_start_time = (int)(DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1))).TotalSeconds;
-            foreach (var peer in this.peers) this.players_answer.Add(new PlayerAnswer() { question_id = this.current_question.id, user_id = int.Parse(peer.UserId), time_server = game_start_time });
+
+            this.players_answer = new PlayerAnswer[this.peers.Count];
+            for (int i = 0; i < peers.Count; i++) this.players_answer[i] = new PlayerAnswer() { question_id = this.current_question.id, user_id = int.Parse(peers[i].UserId), time_server = game_start_time };
 
             this.game.ExecutionFiber.Schedule(() =>
             {
@@ -189,7 +188,7 @@ namespace Photon.LoadBalancing.Custom.Server.Logic
 
         public virtual void OnGameCalculateResult()
         {
-            // send result message to all user
+            this.OnCalculateResult();
 
             this.game.ExecutionFiber.Schedule(() =>
             {
@@ -218,9 +217,9 @@ namespace Photon.LoadBalancing.Custom.Server.Logic
                 if (this.round_index >= this.total_round)
                 {
                     this.state = SongGameState.END;
+                    this.OnNextGamePharse();
                 }
                 else {
-
                     this.OnAllPlayerJoined();
                 }
             }, Rules.TIME_WAIT_TO_NEXT_ROUND);
@@ -228,6 +227,7 @@ namespace Photon.LoadBalancing.Custom.Server.Logic
 
         public virtual void OnGameEnd()
         {
+            this.histories = new List<PlayerAnswer[]>();
             this.game.ExecutionFiber.Schedule(this.game.Release, Rules.TIME_WAIT_TO_QUIT); // destroy game
         }
 
@@ -261,10 +261,61 @@ namespace Photon.LoadBalancing.Custom.Server.Logic
 
             PlayerAnswer pa = players_answer.FirstOrDefault(x => x.user_id == int.Parse(peer.UserId));
             if (pa.time_answer == 0) pa.time_answer = (Int32)(DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1))).TotalSeconds;
-
             pa.anwser_text = operation.AnwserText;
 
             ResponseHandler.AnwserTextResponse(this.peers, int.Parse(peer.UserId), operation.AnwserText); // send broadcast to all player
+        }
+
+        public virtual void OnPlayerAnwserOption(HivePeer peer, OperationRequest operationRequest, SendParameters sendParameters)
+        {
+            // validate the operation request 
+            OperationResponse response;
+            var operation = new AnwserOptionRequest(peer.Protocol, operationRequest);
+            if (OperationHelper.ValidateOperation(operation, log, out response) == false)
+            {
+                peer.SendOperationResponse(response, sendParameters);
+                return;
+            }
+
+            PlayerAnswer pa = players_answer.FirstOrDefault(x => x.user_id == int.Parse(peer.UserId));
+            pa.time_answer = (Int32)(DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1))).TotalSeconds;
+            pa.anwser_option = operation.Index;
+
+            ResponseHandler.AnwserOptionResponse(this.peers, int.Parse(peer.UserId), operation.Index); // send broadcast to all player
+        }
+
+        public virtual void OnCalculateResult()
+        {
+            string corrent_anwser = "";
+            if (this.current_question.answer == 0) corrent_anwser = this.current_question.option1;
+            if (this.current_question.answer == 1) corrent_anwser = this.current_question.option2;
+            if (this.current_question.answer == 2) corrent_anwser = this.current_question.option3;
+            if (this.current_question.answer == 3) corrent_anwser = this.current_question.option4;
+            string corrent_anwser_slug = Slugfy.GenerateSlug(corrent_anwser);
+
+            foreach (PlayerAnswer player in players_answer)
+            {
+                bool correct = false;
+
+                if (player.anwser_option != null)
+                {
+                    if (player.anwser_option == this.current_question.answer) correct = true;
+                }
+
+                if (player.anwser_text != null)
+                {
+                    string player_anwser_slug = Slugfy.GenerateSlug(player.anwser_text).ToLower();
+                    if (player_anwser_slug == corrent_anwser_slug) correct = true;
+                }
+
+                if (correct)
+                {
+                    player.score += 1;
+                }
+            }
+
+            this.histories.Add(this.players_answer);
+            this.players_answer = null;
         }
 
         //public virtual void AddHistory(int userId, string answer_text, int? anwser_option, int score, int time_used = 0)
@@ -325,11 +376,16 @@ namespace Photon.LoadBalancing.Custom.Server.Logic
                     OnPlayerAnwserText(peer, operationRequest, sendParameters);
                     break;
 
+                case MessageTag.G_ANWSER_OPTION:
+                    OnPlayerAnwserOption(peer, operationRequest, sendParameters);
+                    break;
+
                 default:
                     break;
             }
 
         }
+
     }
 }
 #endif

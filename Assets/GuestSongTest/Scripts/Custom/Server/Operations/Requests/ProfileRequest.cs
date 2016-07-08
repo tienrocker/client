@@ -15,9 +15,6 @@ namespace Photon.LoadBalancing.Custom.Server.Operations.Requests
         {
         }
 
-        /// <summary>
-        /// Gets or sets an array of group identifiers the actor whants to join.
-        /// </summary>
         [DataMember(Code = Const.Data1, IsOptional = false)]
         public int UserId { get; set; }
     }

@@ -15,7 +15,8 @@
     public class PanelGame : PanelBase
     {
 
-        #region properties
+        #region Properties
+
         [Header("Debug")]
         [SerializeField]
         private UILabel txtDebug;
@@ -39,44 +40,50 @@
         private UIButton btnBuzz;
         [SerializeField]
         private UIInput txtAnwser;
+        [SerializeField]
+        private UIButton[] btnOptions;
+
+        [Header("Game End Panel")]
+        [SerializeField]
+        private GameObject panelGameEnd;
 
         [Header("Game Data")]
         // [SerializeField]
         private QuestionList[] QuestionLists;
-        // [SerializeField]
-        private int _downloadedAudio = 0;
+        [SerializeField]
+        private int downloadedAudio = 0;
         private int DownloadedAudio
         {
-            get { return this._downloadedAudio; }
-            set
-            {
-                this._downloadedAudio = value;
-                if (value != 0 && value == this.QuestionLists.Length) { onDownloadCompleted(); }
-            }
+            get { return this.downloadedAudio; }
+            set { this.downloadedAudio = value; if (value != 0 && value == this.QuestionLists.Length) { onDownloadCompleted(); } }
         }
         // [SerializeField]
         private SongGameState state = SongGameState.NONE;
 
-        // for visual
-        // [SerializeField]
         private int PlayedRound;
-        // [SerializeField]
         private int TotalRound;
-        // [SerializeField]
         private int PlayedQuestion;
-        // [SerializeField]
         private int TotalQuestion;
 
         private float StartQuestionTime = 0f;
         private float BuzzTime = 0f;
+
+        private int timePlayCountdown = 0;
+        private Coroutine _playCountDown;
 
         #endregion
 
         void Awake()
         {
             EventDelegate.Add(btnLeaveRoom.onClick, onLeaveRoomClick);
-            EventDelegate.Add(btnBuzz.onClick, onBuzzClick);
-            EventDelegate.Add(txtAnwser.onSubmit, onTextAnwser);
+            EventDelegate.Add(btnBuzz.onClick, onAnwserBuzzClick);
+            EventDelegate.Add(txtAnwser.onSubmit, onAnwserTextSubmit);
+
+            for (int i = 0; i < btnOptions.Length; i++)
+            {
+                int btnIndex = i; // fuck mono
+                EventDelegate.Add(btnOptions[i].onClick, () => { onAnwserOptionClick(btnIndex); });
+            }
         }
 
         public override void OnShow()
@@ -91,8 +98,10 @@
             ResponseHandler.onReadyListResponse += onReadyListResponse;
             ResponseHandler.onAnwserBuzzResponse += onAnwserBuzzResponse;
             ResponseHandler.onAnwserTextResponse += onAnwserTextResponse;
+            ResponseHandler.onAnwserOptionResponse += onAnwserOptionResponse;
 
-            panelGameLobby.SetActive(true);
+            this.panelGameLobby.SetActive(true);
+            this.textBuzzVisible();
         }
 
         public override void OnHide()
@@ -106,6 +115,7 @@
             ResponseHandler.onReadyListResponse -= onReadyListResponse;
             ResponseHandler.onAnwserBuzzResponse -= onAnwserBuzzResponse;
             ResponseHandler.onAnwserTextResponse -= onAnwserTextResponse;
+            ResponseHandler.onAnwserOptionResponse -= onAnwserOptionResponse;
         }
 
         public void ChangeState(SongGameState state)
@@ -116,17 +126,29 @@
 
             if (state <= SongGameState.WAIT)
             {
-                if (panelGameLobby.activeSelf == true) panelGameLobby.SetActive(false);
-                if (panelGamePlay.activeSelf == false) panelGamePlay.SetActive(true);
+                if (panelGameLobby.activeSelf == false) panelGameLobby.SetActive(true);
+                if (panelGamePlay.activeSelf == true) panelGamePlay.SetActive(false);
+                if (panelGameEnd.activeSelf == true) panelGameEnd.SetActive(false);
             }
-            else if (state >= SongGameState.READY)
+            else if (state >= SongGameState.READY && state < SongGameState.END)
             {
                 if (panelGameLobby.activeSelf == true) panelGameLobby.SetActive(false);
                 if (panelGamePlay.activeSelf == false) panelGamePlay.SetActive(true);
+                if (panelGameEnd.activeSelf == true) panelGameEnd.SetActive(false);
+            }
+            else if (state >= SongGameState.END)
+            {
+                if (panelGameLobby.activeSelf == true) panelGameLobby.SetActive(false);
+                if (panelGamePlay.activeSelf == true) panelGamePlay.SetActive(false);
+                if (panelGameEnd.activeSelf == false) panelGameEnd.SetActive(true);
             }
 
             this.state = state;
-            if (this._playCountDown != null) StopCoroutine(this._playCountDown);
+            if (this._playCountDown != null)
+            {
+                StopCoroutine(this._playCountDown);
+                this.lblTimeCoundown.text = "0";
+            }
 
             switch (this.state)
             {
@@ -162,7 +184,6 @@
             }
         }
 
-        public int timePlayCountdown = 0;
         private void OnGameReady()
         {
             this.PlayedQuestion = 0;
@@ -172,14 +193,32 @@
 
         private void OnGamePlaying()
         {
-            this.timePlayCountdown = Rules.TIME_WAIT_PER_QUESTION / 1000;
-            this.lblTimeCoundown.text = this.timePlayCountdown.ToString();
-            this._playCountDown = StartCoroutine(PlayCountDown());
+            for (int i = 0; i < btnOptions.Length; i++)
+            {
+                if (i == 0) btnOptions[i].GetComponentInChildren<UILabel>().text = QuestionLists[PlayedQuestion].Option1;
+                if (i == 1) btnOptions[i].GetComponentInChildren<UILabel>().text = QuestionLists[PlayedQuestion].Option2;
+                if (i == 2) btnOptions[i].GetComponentInChildren<UILabel>().text = QuestionLists[PlayedQuestion].Option3;
+                if (i == 3) btnOptions[i].GetComponentInChildren<UILabel>().text = QuestionLists[PlayedQuestion].Option4;
+            }
 
-            this.lblQuestion.text = QuestionLists[this.PlayedQuestion].Question;
-            this.audioSource.clip = QuestionLists[this.PlayedQuestion].AudioClip;
-            this.audioSource.Play();
-            this.PlayedQuestion++;
+            timePlayCountdown = Rules.TIME_WAIT_PER_QUESTION / 1000;
+            lblTimeCoundown.text = timePlayCountdown.ToString();
+            _playCountDown = StartCoroutine(PlayCountDown());
+
+            lblQuestion.text = QuestionLists[PlayedQuestion].Question;
+            audioSource.clip = QuestionLists[PlayedQuestion].AudioClip;
+            audioSource.Play();
+            PlayedQuestion++;
+
+            textBuzzVisible(btnBuzz.gameObject);
+            StartCoroutine(WaitForSeconds(Rules.TIME_WAIT_PART_1, () =>
+            {
+                if (txtAnwser.gameObject.activeSelf == false)
+                {
+                    textBuzzVisible(); // disable buzz button and awnser input text
+                }
+            }));
+
         }
 
         private void OnGameCalculateResult()
@@ -248,15 +287,16 @@
             RequestHandler.RequestReadyPlay(); // send message server, user ready to play
         }
 
-        private Coroutine _playCountDown;
+        private IEnumerator WaitForSeconds(float time, Action callback) { yield return new WaitForSeconds(time); if (callback != null) callback(); }
+        
         private IEnumerator PlayCountDown()
         {
-            yield return new WaitForSeconds(1);
-            this.timePlayCountdown--;
-            this.lblTimeCoundown.text = this.timePlayCountdown.ToString();
-
-            // if (this.timePlayCountdown == 8) { }
-            if (this.timePlayCountdown > 0) this._playCountDown = StartCoroutine(PlayCountDown());
+            while (this.timePlayCountdown > 0)
+            {
+                yield return new WaitForSeconds(1);
+                this.timePlayCountdown--;
+                this.lblTimeCoundown.text = this.timePlayCountdown.ToString();
+            }
         }
 
         private IEnumerator DownloadAudioClip(string clipUrl, Action<AudioClip> finishCallback, Action<float> processCallback = null)
@@ -277,7 +317,8 @@
                 yield return null;
             }
 
-            finishCallback(www.audioClip);
+            AudioClip clip = www.GetAudioClip(true, true);
+            finishCallback(clip);
         }
 
         private void onReadyListResponse(ReadyPlayersResponse response)
@@ -305,19 +346,55 @@
             PhotonNetwork.LeaveRoom();
         }
 
-        private void onBuzzClick() { if (this.state == SongGameState.PLAYING) { RequestHandler.RequestAnwserBuzz(); } }
+        private void textBuzzVisible(GameObject activeObject = null)
+        {
+            this.btnBuzz.gameObject.SetActive(false);
+            this.txtAnwser.gameObject.SetActive(false);
+            if (activeObject != null) activeObject.SetActive(true);
+        }
+
+        private void onAnwserBuzzClick()
+        {
+            if (this.state != SongGameState.PLAYING) return;
+            RequestHandler.RequestAnwserBuzz();
+        }
 
         private void onAnwserBuzzResponse(AnwserBuzzResponse response)
         {
-            if (response.Id == Me.Data.id) { this.txtAnwser.gameObject.SetActive(true); }
+            if (this.state != SongGameState.PLAYING) return;
+            if (response.Id == Me.Data.id) { this.textBuzzVisible(this.txtAnwser.gameObject); }
         }
 
-        private void onTextAnwser() { if (this.state == SongGameState.PLAYING) { RequestHandler.RequestAnwserText(txtAnwser.value); } }
+        private void onAnwserTextSubmit()
+        {
+            if (this.state != SongGameState.PLAYING) return;
+            RequestHandler.RequestAnwserText(txtAnwser.value);
+        }
 
         private void onAnwserTextResponse(AnwserTextResponse response)
         {
+            if (this.state != SongGameState.PLAYING) return;
         }
 
+        private void optionsButtonVisible(bool flag = true)
+        {
+            foreach (var btn in this.btnOptions)
+            {
+                if (flag == true) btn.gameObject.SetActive(false);
+                else btn.gameObject.SetActive(true);
+            }
+        }
+
+        private void onAnwserOptionClick(int btnIndex)
+        {
+            if (this.state != SongGameState.PLAYING) return;
+            RequestHandler.RequestAnwserOption(btnIndex);
+        }
+
+        private void onAnwserOptionResponse(AnwserOptionResponse response)
+        {
+            if (this.state != SongGameState.PLAYING) return;
+        }
 
     }
 }

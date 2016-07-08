@@ -6,18 +6,18 @@ namespace Photon.LoadBalancing.Custom.Server.Operations.Requests
     using Photon.SocketServer;
     using SocketServer.Rpc;
 
-    public class AnwserTextRequest : BaseRequest
+    public class AnwserOptionRequest : BaseRequest
     {
-        public AnwserTextRequest()
+        public AnwserOptionRequest()
         {
         }
 
-        public AnwserTextRequest(IRpcProtocol protocol, OperationRequest operationRequest) : base(protocol, operationRequest)
+        public AnwserOptionRequest(IRpcProtocol protocol, OperationRequest operationRequest) : base(protocol, operationRequest)
         {
         }
 
         [DataMember(Code = Const.Data1, IsOptional = false)]
-        public string AnwserText { get; set; }
+        public int Index { get; set; }
     }
 
 }

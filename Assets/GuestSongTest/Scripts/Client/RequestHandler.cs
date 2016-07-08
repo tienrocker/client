@@ -29,6 +29,11 @@ namespace Photon.LoadBalancing.Client
         {
             new AnwserTextRequest(anwserText).Execute();
         }
+
+        public static void RequestAnwserOption(int index)
+        {
+            new AnwserOptionRequest(index).Execute();
+        }
     }
 }
 #endif

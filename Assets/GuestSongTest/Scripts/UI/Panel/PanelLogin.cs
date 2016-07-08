@@ -46,7 +46,7 @@ namespace GuestSong
             NetworkManager.Instance.onCustomAuthenticationFailed += OnCustomAuthenticationFailed;
 
             this.txtUserName.isSelected = true;
-            if (this.autoLogin && this.autoLoginTimes < this.maxAutoLoginTimes)
+            if (!PhotonHandler.AppQuits && this.autoLogin && this.autoLoginTimes < this.maxAutoLoginTimes)
             {
                 NetworkManager.Instance.Connect(txtUserName.value, txtPassword.value, false);
                 this.autoLoginTimes++;

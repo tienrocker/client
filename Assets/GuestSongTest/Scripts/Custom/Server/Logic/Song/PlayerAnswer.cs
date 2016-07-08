@@ -13,5 +13,6 @@ namespace Photon.LoadBalancing.Custom.Server.Logic.Song
         public int? anwser_option;
         public int time_server;
         public int time_answer;
+        public int score;
     }
 }

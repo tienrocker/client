@@ -16,8 +16,8 @@ namespace Photon.LoadBalancing.Client.Operations.Responses
 
         public ReadyPlayersResponse(OperationResponse operationResponse)
         {
-            if (!operationResponse.Parameters.ContainsKey(MessageTag.KINGPLAY_OPERATION_TAG)) throw new System.Exception("ProfileResponse: Invalid Response Type");
-            if (!operationResponse.Parameters.ContainsKey(Const.Data1)) throw new Exception("ProfileResponse: Invalid Data 1 - Id");
+            if (!operationResponse.Parameters.ContainsKey(MessageTag.KINGPLAY_OPERATION_TAG)) throw new System.Exception("ReadyPlayersResponse: Invalid Response Type");
+            if (!operationResponse.Parameters.ContainsKey(Const.Data1)) throw new Exception("ReadyPlayersResponse: Invalid Data 1 - Id");
 
             try
             {
@@ -26,7 +26,7 @@ namespace Photon.LoadBalancing.Client.Operations.Responses
             }
             catch
             {
-                throw new Exception("ProfileResponse: Invalid Data Type");
+                throw new Exception("ReadyPlayersResponse: Invalid Data Type");
             }
         }
     }
